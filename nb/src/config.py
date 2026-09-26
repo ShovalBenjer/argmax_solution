@@ -21,6 +21,7 @@ Example:
 import os
 from pathlib import Path
 from typing import Optional
+
 from loguru import logger
 
 try:
@@ -77,17 +78,21 @@ class Config:
 
     def __init__(self):
         logger.info("Initializing configuration...")
-        
+
         # Service URLs - Support both OLLAMA_URL and OLLAMA_HOST for Docker compatibility
-        self.OPENSEARCH_URL: str = config("OPENSEARCH_URL", default="http://localhost:9200")
+        self.OPENSEARCH_URL: str = config(
+            "OPENSEARCH_URL", default="http://localhost:9200"
+        )
         logger.debug(f"OPENSEARCH_URL: {self.OPENSEARCH_URL}")
-        
+
         # Check for OLLAMA_HOST (used in Docker Compose), then OLLAMA_URL, then default
         _ollama_host = config("OLLAMA_HOST", default=None)
         _ollama_url = config("OLLAMA_URL", default=None)
         if _ollama_host and "://" not in _ollama_host:
             self.OLLAMA_URL: str = f"http://{_ollama_host}:11434"
-            logger.debug(f"OLLAMA_URL set from OLLAMA_HOST (no schema): {self.OLLAMA_URL}")
+            logger.debug(
+                f"OLLAMA_URL set from OLLAMA_HOST (no schema): {self.OLLAMA_URL}"
+            )
         elif _ollama_host:
             self.OLLAMA_URL: str = _ollama_host
             logger.debug(f"OLLAMA_URL set from OLLAMA_HOST: {self.OLLAMA_URL}")
@@ -97,7 +102,7 @@ class Config:
         else:
             self.OLLAMA_URL: str = "http://localhost:11434"
             logger.debug(f"OLLAMA_URL defaulted to: {self.OLLAMA_URL}")
-        
+
         self.MLFLOW_TRACKING_URI: str = config(
             "MLFLOW_TRACKING_URI", default="http://localhost:5000"
         )
@@ -107,15 +112,22 @@ class Config:
         self.REDIS_HOST: str = config("REDIS_HOST", default="localhost")
         self.REDIS_PORT: int = config("REDIS_PORT", default=6379, cast=int)
         self.REDIS_DB: int = config("REDIS_DB", default=0, cast=int)
-        logger.debug(f"REDIS_HOST: {self.REDIS_HOST}, REDIS_PORT: {self.REDIS_PORT}, REDIS_DB: {self.REDIS_DB}")
+        logger.debug(
+            (
+                f"REDIS_HOST: {self.REDIS_HOST}, REDIS_PORT: {self.REDIS_PORT}, REDIS_DB: "
+                f"{self.REDIS_DB}"
+            )
+        )
 
         # API Keys (sensitive, log only presence)
         self.HUGGING_FACE_HUB_TOKEN: Optional[str] = config(
             "HUGGING_FACE_HUB_TOKEN", default=None
         )
-        if self.HUGGING_FACE_HUB_TOKEN: logger.debug("HUGGING_FACE_HUB_TOKEN is set.")
+        if self.HUGGING_FACE_HUB_TOKEN:
+            logger.debug("HUGGING_FACE_HUB_TOKEN is set.")
         self.GOOGLE_API_KEY: Optional[str] = config("GOOGLE_API_KEY", default=None)
-        if self.GOOGLE_API_KEY: logger.debug("GOOGLE_API_KEY is set.")
+        if self.GOOGLE_API_KEY:
+            logger.debug("GOOGLE_API_KEY is set.")
 
         # Project paths
         self.PROJECT_ROOT = Path(__file__).resolve().parent
@@ -140,9 +152,11 @@ class Config:
         logger.debug(f"QWEN_MAX_CONTEXT_TOKENS: {self.QWEN_MAX_CONTEXT_TOKENS}")
 
         # New timeout configurations
-        self.ARCTIC_TIMEOUT: float = config("ARCTIC_TIMEOUT", default= app_config.ARCTIC_TIMEOUT, cast=float)
-        self.QWEN_TIMEOUT: float = config("QWEN_TIMEOUT", default= app_config.QWEN_TIMEOUT, cast=float)
-        logger.debug(f"ARCTIC_TIMEOUT: {self.ARCTIC_TIMEOUT}s, QWEN_TIMEOUT: {self.QWEN_TIMEOUT}s")
+        self.ARCTIC_TIMEOUT: float = config("ARCTIC_TIMEOUT", default=30.0, cast=float)
+        self.QWEN_TIMEOUT: float = config("QWEN_TIMEOUT", default=30.0, cast=float)
+        logger.debug(
+            f"ARCTIC_TIMEOUT: {self.ARCTIC_TIMEOUT}s, QWEN_TIMEOUT: {self.QWEN_TIMEOUT}s"
+        )
 
         # Rate limiting
         self.RPM_LIMIT: int = config("RPM_LIMIT", default=10, cast=int)
@@ -155,7 +169,9 @@ class Config:
 
     @property
     def REDIS_URL(self) -> str:
-        logger.debug(f"Constructing REDIS_URL: redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}")
+        logger.debug(
+            f"Constructing REDIS_URL: redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        )
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     @classmethod

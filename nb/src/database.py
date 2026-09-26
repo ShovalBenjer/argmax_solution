@@ -27,11 +27,9 @@ Example:
 import json
 import sqlite3
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-import polars as pl
 from config import app_config
 from loguru import logger
 from opensearchpy import OpenSearch
@@ -285,7 +283,11 @@ class DatabaseManager:
                     best_match_data.get("is_explicitly_non_vegan", False)
                 )
                 logger.debug(
-                    f"Found vegan info for '{ingredient_name}' (fuzzy match, score {best_match_score:.2f}): {best_match_data}"
+                    (
+                        f"Found vegan info for '{ingredient_name}' (fuzzy match, score "
+                        f"{best_match_score:.2f}): "
+                        f"{best_match_data}"
+                    )
                 )
                 return best_match_data
             else:

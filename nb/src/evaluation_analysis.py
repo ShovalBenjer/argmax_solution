@@ -52,8 +52,7 @@ import matplotlib.pyplot as plt
 import polars as pd
 import seaborn as sns
 from IPython.display import Markdown, display
-from sklearn.metrics import (auc, classification_report, confusion_matrix,
-                             roc_curve)
+from sklearn.metrics import auc, classification_report, confusion_matrix, roc_curve
 
 # Use a modern, publication-quality plotting style
 sns.set_theme(style="whitegrid", palette="muted")

@@ -34,8 +34,6 @@ Example:
     >>> test_enhanced_processor()
 """
 
-import json
-
 # TODO: This test is disabled because ingredient_processor module was deleted
 # The functionality has been replaced with database manager queries
 # from src.ingredient_processor import processor

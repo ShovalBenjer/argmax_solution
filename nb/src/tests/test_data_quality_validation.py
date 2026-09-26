@@ -48,6 +48,7 @@ Example:
     >>> # Run complete data quality validation
     >>> sys.exit(main())
 """
+
 import logging
 import sqlite3
 import sys
@@ -61,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 # Add nb/src to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from config import app_config
+from config import app_config  # noqa: E402
 
 # Data Quality Benchmarks
 BENCHMARKS = {
@@ -105,11 +106,19 @@ def validate_database_exists():
 
     if size_mb < BENCHMARKS["min_database_size_mb"]:
         logger.warning(
-            f"Database size {size_mb:.1f} MB below benchmark {BENCHMARKS['min_database_size_mb']} MB"
+            (
+                f"Database size {size_mb:.1f} MB below benchmark "
+                f"{BENCHMARKS['min_database_size_mb']} "
+                f"MB"
+            )
         )
     else:
         logger.info(
-            f"Database size meets benchmark ({size_mb:.1f} MB >= {BENCHMARKS['min_database_size_mb']} MB)"
+            (
+                f"Database size meets benchmark ({size_mb:.1f} MB >= "
+                f"{BENCHMARKS['min_database_size_mb']} "
+                f"MB)"
+            )
         )
 
 
@@ -197,11 +206,19 @@ def validate_record_counts():
 
         if nutrition_count < BENCHMARKS["nutrition_facts_min_records"]:
             logger.warning(
-                f"nutrition_facts: {nutrition_count} records < {BENCHMARKS['nutrition_facts_min_records']} benchmark"
+                (
+                    f"nutrition_facts: {nutrition_count} records < "
+                    f"{BENCHMARKS['nutrition_facts_min_records']} "
+                    f"benchmark"
+                )
             )
         else:
             logger.info(
-                f"nutrition_facts: {nutrition_count} records >= {BENCHMARKS['nutrition_facts_min_records']} benchmark"
+                (
+                    f"nutrition_facts: {nutrition_count} records >= "
+                    f"{BENCHMARKS['nutrition_facts_min_records']} "
+                    f"benchmark"
+                )
             )
 
         # Check vegan_ontology
@@ -211,11 +228,19 @@ def validate_record_counts():
 
         if vegan_count < BENCHMARKS["vegan_ontology_min_records"]:
             logger.warning(
-                f"vegan_ontology: {vegan_count} records < {BENCHMARKS['vegan_ontology_min_records']} benchmark"
+                (
+                    f"vegan_ontology: {vegan_count} records < "
+                    f"{BENCHMARKS['vegan_ontology_min_records']} "
+                    f"benchmark"
+                )
             )
         else:
             logger.info(
-                f"vegan_ontology: {vegan_count} records >= {BENCHMARKS['vegan_ontology_min_records']} benchmark"
+                (
+                    f"vegan_ontology: {vegan_count} records >= "
+                    f"{BENCHMARKS['vegan_ontology_min_records']} "
+                    f"benchmark"
+                )
             )
 
         # Check unit_conversions
@@ -225,11 +250,19 @@ def validate_record_counts():
 
         if unit_count < BENCHMARKS["unit_conversions_min_records"]:
             logger.warning(
-                f"unit_conversions: {unit_count} records < {BENCHMARKS['unit_conversions_min_records']} benchmark"
+                (
+                    f"unit_conversions: {unit_count} records < "
+                    f"{BENCHMARKS['unit_conversions_min_records']} "
+                    f"benchmark"
+                )
             )
         else:
             logger.info(
-                f"unit_conversions: {unit_count} records >= {BENCHMARKS['unit_conversions_min_records']} benchmark"
+                (
+                    f"unit_conversions: {unit_count} records >= "
+                    f"{BENCHMARKS['unit_conversions_min_records']} "
+                    f"benchmark"
+                )
             )
 
         return results

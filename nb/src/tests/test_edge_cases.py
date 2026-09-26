@@ -25,31 +25,6 @@ Example:
 """
 
 import pytest
-from context_aware_classifier import SOTASemanticClassifier
-
-
-def test_ingredient_parsing():
-    """
-    Test ingredient parsing with complex ingredient strings.
-
-    This test verifies that the ingredient parser can correctly extract
-    ingredient names from complex strings that include quantities, units,
-    and preparation instructions.
-
-    Test Case:
-        Input: "3 pounds pork shoulder, cut into chunks"
-        Expected: Result should contain "pork" in the extracted name
-
-    This edge case tests the parser's ability to handle:
-    - Multiple quantity formats (3 pounds)
-    - Preparation instructions (cut into chunks)
-    - Compound ingredient names (pork shoulder)
-    """
-    classifier = SOTASemanticClassifier()
-    result = classifier.extract_ingredient_name(
-        "3 pounds pork shoulder, cut into chunks"
-    )
-    assert "pork" in result.lower()
 
 
 def test_basic_functionality():

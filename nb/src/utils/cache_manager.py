@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+
 """
 Redis Cache Manager for Diet Classification System
 
@@ -9,6 +11,7 @@ with graceful fallback when Redis is unavailable.
 
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -56,7 +59,9 @@ class CacheManager:
             )
             self._redis_client.ping()
             self._is_connected = True
-            logger.info(f"Redis cache manager connected to {app_config.REDIS_HOST}:{app_config.REDIS_PORT}")
+            logger.info(
+                f"Redis cache manager connected to {app_config.REDIS_HOST}:{app_config.REDIS_PORT}"
+            )
         except Exception as e:
             logger.warning(f"Redis connection failed: {e}. Caching is disabled.")
             self._redis_client = None
@@ -89,7 +94,9 @@ class CacheManager:
         except (redis.exceptions.RedisError, TypeError) as e:
             logger.error(f"Failed to set cache key '{key}': {e}")
 
-    def get_ingredient_classification(self, ingredient_key: str) -> Optional[Dict[str, Any]]:
+    def get_ingredient_classification(
+        self, ingredient_key: str
+    ) -> Optional[Dict[str, Any]]:
         """
         Retrieve a cached classification result for a single ingredient.
         """
@@ -101,7 +108,9 @@ class CacheManager:
         logger.debug(f"Cache miss for ingredient: {ingredient_key}")
         return None
 
-    def set_ingredient_classification(self, ingredient_key: str, result: Dict[str, Any], ttl: int = 604800):
+    def set_ingredient_classification(
+        self, ingredient_key: str, result: Dict[str, Any], ttl: int = 604800
+    ):
         """
         Cache a classification result for a single ingredient. TTL defaults to 7 days.
         """
@@ -110,7 +119,7 @@ class CacheManager:
         cache_data = {
             "classification_result": result,
             "cached_at": time.time(),
-            "cache_version": "1.0"
+            "cache_version": "1.0",
         }
         self.set(cache_key, cache_data, ttl)
         logger.debug(f"Cached classification for ingredient: {ingredient_key}")

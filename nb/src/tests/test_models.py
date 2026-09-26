@@ -50,7 +50,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from llm_client import LLMClient
+from llm_client import LLMClient  # noqa: E402
 
 
 async def test_model_availability():
@@ -70,7 +70,8 @@ async def test_model_availability():
 
     Test Cases:
         - Model listing and availability checking
-        - Arctic Text2SQL query: "SELECT name FROM nutrition_facts WHERE name LIKE '%chicken%' LIMIT 1"
+        - Arctic Text2SQL query:
+          "SELECT name FROM nutrition_facts WHERE name LIKE '%chicken%' LIMIT 1"
         - Qwen classification query: "Is chicken breast keto-friendly?" with JSON response
 
     The test validates:
@@ -103,18 +104,18 @@ async def test_model_availability():
 
     # Test 2: Check Arctic model availability
     arctic_name = "arctic-text2sql-r1-7b"
-    print(f"\n2. Arctic Model Check:")
+    print("\n2. Arctic Model Check:")
     print(f"   Model name: {arctic_name}")
     print(f"   Available: {client.is_model_available(arctic_name)}")
 
     # Test 3: Check Qwen model availability
     qwen_name = "qwen/qwen3-0.6b-gguf:q8_0"
-    print(f"\n3. Qwen Model Check:")
+    print("\n3. Qwen Model Check:")
     print(f"   Model name: {qwen_name}")
     print(f"   Available: {client.is_model_available(qwen_name)}")
 
     # Test 4: Simple Arctic query
-    print(f"\n4. Arctic Text2SQL Test:")
+    print("\n4. Arctic Text2SQL Test:")
     if client.is_model_available(arctic_name):
         try:
             result = await client.query_async(
@@ -129,12 +130,16 @@ async def test_model_availability():
         print("   Arctic model not available for testing")
 
     # Test 5: Simple Qwen query
-    print(f"\n5. Qwen Classification Test:")
+    print("\n5. Qwen Classification Test:")
     if client.is_model_available(qwen_name):
         try:
             result = await client.query_async(
                 qwen_name,
-                'Is chicken breast keto-friendly? Answer with JSON: {"is_keto": boolean, "reasoning": "text"}',
+                (
+                    'Is chicken breast keto-friendly? Answer with JSON: {"is_keto": boolean, '
+                    '"reasoning": '
+                    '"text"}'
+                ),
                 as_json=True,
             )
             print(f"   Qwen response: {result}")

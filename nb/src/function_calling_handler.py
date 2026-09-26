@@ -33,9 +33,8 @@ Example:
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from config import app_config
 from llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
@@ -134,12 +133,14 @@ class FunctionCallingHandler:
 DATABASE SCHEMA CONTEXT:
 
 1. `nutrition_facts` table:
-   - Columns: `name`, `calories`, `carbohydrate_g`, `fiber_g`, `protein_g`, `total_fat_g`, `cholesterol_mg`, `vitamin_b12_mcg`
+   - Columns: `name`, `calories`, `carbohydrate_g`, `fiber_g`, `protein_g`,
+     `total_fat_g`, `cholesterol_mg`, `vitamin_b12_mcg`
    - Description: Contains nutritional information per 100g for various food items.
 
 2. `vegan_ontology` table:
    - Columns: `term`, `aliases`, `is_explicitly_non_vegan`, `description`
-   - Description: A knowledge base of vegan and non-vegan terms. `is_explicitly_non_vegan` is a boolean.
+   - Description: A knowledge base of vegan and non-vegan terms.
+     `is_explicitly_non_vegan` is a boolean.
 
 3. `unit_conversions` table:
    - Columns: `unit`, `factor`, `type`
@@ -202,7 +203,9 @@ Respond with ONLY the generated JSON object, nothing else.
             return {"error": f"Model not available: {model_name}"}
 
         try:
-            result = await self.llm_client.query_async(model_name, prompt, as_json=True, timeout=20.0)
+            result = await self.llm_client.query_async(
+                model_name, prompt, as_json=True, timeout=20.0
+            )
 
             if "error" in result:
                 raise ValueError(result.get("error", "Unknown LLM error"))

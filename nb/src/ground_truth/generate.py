@@ -19,30 +19,41 @@ from typing import Any, Callable, Dict, List, Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # --- External API Imports ---
-import google.generativeai as genai
-import polars as pd
-import polars as pl
+import google.generativeai as genai  # noqa: E402
+import polars as pl  # noqa: E402
+
+try:
+    import mlflow
+
+    MLFLOW_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    mlflow = None
+    MLFLOW_AVAILABLE = False
+import tqdm.asyncio as tqdm_asyncio  # noqa: E402
+
 # --- Local Module Imports ---
 # Assumes the script is run with the `src` directory in the Python path.
 # from llm_handler.handler import LLMHandler
-from context_aware_classifier import ContextAwareDietClassifier
-from dotenv import load_dotenv
-from google.generativeai.types import HarmBlockThreshold, HarmCategory
+from context_aware_classifier import SOTASemanticClassifier  # noqa: E402
+from context_aware_classifier import execute_sql_query  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+from google.generativeai.types import HarmBlockThreshold, HarmCategory  # noqa: E402
+
 # Removed unused import: get_context_with_rapidfuzz_fallback
-from opensearchpy import OpenSearch
-from tqdm import tqdm
+from opensearchpy import OpenSearch  # noqa: E402
+from tqdm import tqdm  # noqa: E402
 
 load_dotenv()
 
 # --- Configuration ---
 CONFIG = {
-    "OUTPUT_DIR": Path("nb/src/data"),
+    "OUTPUT_DIR": Path("nb / src / data"),
     "GROUND_TRUTH_FILENAME": "personas_ground_truth.csv",
     "SAMPLE_SIZE": 100,
     "BATCH_SIZE": 25,
-    "PRIMARY_MODEL": "gemini-2.5-pro",  # Emphasize Gemini first
-    "FALLBACK_MODEL": "gemma3:1b",  # Fallback to Gemma3-1B if Gemini unavailable
-    "TEACHER_MODEL": os.getenv("TEACHER_MODEL", "gemini-2.5-pro"),
+    "PRIMARY_MODEL": "gemini - 2.5 - pro",  # Emphasize Gemini first
+    "FALLBACK_MODEL": "gemma3:1b",  # Fallback to Gemma3 - 1B if Gemini unavailable
+    "TEACHER_MODEL": os.getenv("TEACHER_MODEL", "gemini - 2.5 - pro"),
     "MLFLOW_TRACKING_URI": os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"),
     "OPENSEARCH_URL": os.getenv("OPENSEARCH_URL", "http://localhost:9200"),
     "RPM_LIMIT": int(os.getenv("RPM_LIMIT", 10)),
@@ -51,9 +62,9 @@ CONFIG = {
 }
 
 MODELS_QUOTAS = {
-    "gemini-2.5-pro": (5, 250_000),
-    "gemini-2.5-flash": (10, 250_000),
-    "gemini-2.5-flash-lite-preview-06-17": (15, 250_000),
+    "gemini - 2.5 - pro": (5, 250_000),
+    "gemini - 2.5 - flash": (10, 250_000),
+    "gemini - 2.5 - flash - lite - preview - 06 - 17": (15, 250_000),
     "gemma3:1b": (60, 1_000_000),  # Higher limits for local Ollama model
 }
 
@@ -124,7 +135,8 @@ def build_vegan_prompt(recipe_rows: List[Dict[str, Any]]) -> list:
         - Specifies a chain-of-thought process and required JSON output format.
 
     Parameters:
-        - recipe_rows (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents a recipe.
+        - recipe_rows (List[Dict[str, Any]]): A list of dictionaries, where each dictionary
+        represents a recipe.
 
     Returns:
         - list: A list containing the user prompt and the desired JSON schema.
@@ -138,15 +150,19 @@ def build_vegan_prompt(recipe_rows: List[Dict[str, Any]]) -> list:
         for r in recipe_rows
     ]
     user_prompt = f"""
-    You are a meticulous food scientist. Your task is to determine if each recipe in the following list is strictly vegan.
-    A recipe is **strictly vegan** if it contains absolutely no animal products (no meat, poultry, fish, dairy, eggs, honey, etc.).
+    You are a meticulous food scientist. Your task is to determine if each recipe in the following
+    list is strictly vegan.
+    A recipe is **strictly vegan** if it contains absolutely no animal products (no meat, poultry,
+    fish, dairy, eggs, honey, etc.).
     **Analysis Process:**
     1. For each recipe, carefully examine the ingredients.
-    2. In your reasoning, first list any and all ingredients that are or could be derived from animals.
+    2. In your reasoning, first list any and all ingredients that are or could be derived from
+    animals.
     3. After listing the evidence, make a final "Verdict" in your reasoning.
     4. Based on your verdict, set `is_vegan` to `true` or `false`.
     **RESPONSE INSTRUCTIONS:**
-    - You must respond with ONLY a single, valid JSON array. Each object must correspond to a recipe.
+    - You must respond with ONLY a single, valid JSON array. Each object must correspond to a
+    recipe.
     - If you identify ANY potential animal product, `is_vegan` MUST be `false`.
     **RECIPE DATA:**
     ```json
@@ -178,7 +194,8 @@ def build_keto_prompt(recipe_rows: List[Dict[str, Any]]) -> list:
         - Specifies a JSON output format.
 
     Parameters:
-        - recipe_rows (List[Dict[str, Any]]): A list of dictionaries, where each dictionary represents a recipe.
+        - recipe_rows (List[Dict[str, Any]]): A list of dictionaries, where each dictionary
+        represents a recipe.
 
     Returns:
         - list: A list containing the user prompt and the desired JSON schema.
@@ -196,18 +213,25 @@ def build_keto_prompt(recipe_rows: List[Dict[str, Any]]) -> list:
             }
         )
     user_prompt = f"""
-    You are a meticulous nutritionist. Your task is to determine if each recipe is strictly keto-friendly.
-    A recipe is **strictly keto** if it contains NO ingredients with more than 10g of carbohydrates per 100g serving.
+    You are a meticulous nutritionist. Your task is to determine if each recipe is strictly
+    keto-friendly.
+    A recipe is **strictly keto** if it contains NO ingredients with more than 10g of carbohydrates
+    per 100g serving.
     **CRITICAL INSTRUCTION FOR MISSING DATA:**
-    - The `rag_summary` may be incomplete or incorrect. You MUST use your own expert knowledge to override it.
-    - For example, you know that 'pizza crust', 'pasta', 'bread', 'sugar', 'potatoes', 'flour', and 'rice' are ALWAYS high in carbohydrates (>10g/100g). Classify them as high-carb even if the summary says '0.0g'.
+    - The `rag_summary` may be incomplete or incorrect. You MUST use your own expert knowledge to
+    override it.
+    - For example, you know that 'pizza crust', 'pasta', 'bread', 'sugar', 'potatoes', 'flour', and
+    'rice' are ALWAYS high in carbohydrates (>10g/100g).
+    Classify them as high-carb even if the summary says '0.0g'.
     **Analysis Process:**
-    1. For each recipe, identify ingredients with >10g of carbs per 100g, using the `rag_summary` AND your own knowledge.
+    1. For each recipe, identify ingredients with >10g of carbs per 100g, using the `rag_summary`
+    AND your own knowledge.
     2. In your reasoning, first list all high-carbohydrate ingredients you identified.
     3. After listing the evidence, make a final "Verdict" in your reasoning.
     4. Based on your verdict, set `is_keto` to `true` or `false`.
     **RESPONSE INSTRUCTIONS:**
-    - You must respond with ONLY a single, valid JSON array. Each object must correspond to a recipe.
+    - You must respond with ONLY a single, valid JSON array. Each object must correspond to a
+    recipe.
     - If you identify ANY high-carbohydrate ingredient, `is_keto` MUST be `false`.
     **RECIPE DATA:**
     ```json
@@ -250,7 +274,8 @@ async def classify_recipes(
         - prompt_builder (Callable): The function for building the classification prompt.
 
     Returns:
-        - Optional[List[Dict[str, Any]]]: A list of classification results, or None if the API call fails.
+        - Optional[List[Dict[str, Any]]]: A list of classification results, or None if the API call
+        fails.
 
     Raises:
         - Exception: Catches and logs any exception during the API call, returning None.
@@ -292,8 +317,8 @@ async def enrich_with_sql_context(recipe: Dict, sql_handler) -> Dict:
         nutrition_q = f"SELECT * FROM nutrition_facts WHERE name LIKE '%{ingredient}%'"
         vegan_q = f"SELECT * FROM vegan_ontology WHERE term LIKE '%{ingredient}%'"
 
-        nutrition_data = execute_sql_query(nutrition_q)
-        vegan_data = execute_sql_query(vegan_q)
+        nutrition_data = execute_sql_query(nutrition_q, ())
+        vegan_data = execute_sql_query(vegan_q, ())
 
         enriched_ingredients.append(
             {"name": ingredient, "nutrition": nutrition_data, "vegan_info": vegan_data}
@@ -356,7 +381,10 @@ async def worker(
                     results_list.extend(individual_result)
                 else:
                     logging.error(
-                        f"Worker '{name}': Failed to process recipe {recipe.get('_id')} even individually."
+                        (
+                            f"Worker '{name}': Failed to process recipe {recipe.get('_id')} even "
+                            f"individually."
+                        )
                     )
                 pbar.update(1)
         batch_queue.task_done()
@@ -427,7 +455,7 @@ def wait_for_index(
         except Exception as e:
             logging.warning(f"Error checking for index: {e}")
         logging.info(
-            f"Retrying in {retry_interval} seconds... (attempt {i+1}/{max_retries})"
+            f"Retrying in {retry_interval} seconds... (attempt {i + 1}/{max_retries})"
         )
         time.sleep(retry_interval)
     logging.error(f"Index '{index_name}' not found after maximum retries.")
@@ -447,10 +475,11 @@ def fetch_recipes_synchronously(os_client: OpenSearch) -> List[Dict]:
 
 async def classify_batch(
     batch: List[Dict],
-    classifier: ContextAwareDietClassifier,
+    classifier: SOTASemanticClassifier,
     rate_limiter: AsyncTokenBucket,
 ) -> List[Dict]:
-    """Classifies a batch of recipes using the LLM handler for both vegan and keto classifications."""
+    """Classifies a batch of recipes using the LLM handler for both vegan and keto
+    classifications."""
     try:
         results = []
         for recipe in batch:
@@ -466,7 +495,8 @@ async def classify_batch(
             merged_result = {
                 "recipe_id": recipe_id,
                 "title": title,
-                "ingredients": ingredients,  # Keep ingredients as a JSON string for consistency in output
+                # Keep ingredients as a JSON string for consistency in output
+                "ingredients": ingredients,
             }
 
             # Add classification results
@@ -517,7 +547,7 @@ async def classify_batch(
 
 async def classify_and_log_async(processed_recipes: List[Dict]):
     """Runs the asynchronous classification and MLflow logging pipeline."""
-    classifier = ContextAwareDietClassifier()
+    classifier = SOTASemanticClassifier()
     rate_limiter = AsyncTokenBucket(CONFIG["RPM_LIMIT"], CONFIG["TPM_LIMIT"])
 
     # Run Classification
@@ -535,32 +565,38 @@ async def classify_and_log_async(processed_recipes: List[Dict]):
         logging.error("Classification failed for all batches. No data to save.")
         return
 
-    mlflow.set_tracking_uri(CONFIG["MLFLOW_TRACKING_URI"])
-    with mlflow.start_run(run_name="SOTA Personas Ground Truth Generation") as run:
-        logging.info(f"MLflow run started: {run.info.run_id}")
-        mlflow.log_params(CONFIG)
+    if MLFLOW_AVAILABLE:
+        mlflow.set_tracking_uri(CONFIG["MLFLOW_TRACKING_URI"])
+        with mlflow.start_run(run_name="SOTA Personas Ground Truth Generation") as run:
+            logging.info(f"MLflow run started: {run.info.run_id}")
+            mlflow.log_params(CONFIG)
 
-        final_data = []
-        for res in all_results:
-            # Flatten lists before saving to CSV
-            flat_res = {"recipe_id": res.get("recipe_id"), "title": res.get("title")}
-            for k, v in res.items():
-                if k not in ["recipe_id", "title"]:
-                    if isinstance(v, list):
-                        flat_res[k] = ", ".join(map(str, v))
-                    else:
-                        flat_res[k] = v
-            final_data.append(flat_res)
+            final_data = []
+            for res in all_results:
+                # Flatten lists before saving to CSV
+                flat_res = {
+                    "recipe_id": res.get("recipe_id"),
+                    "title": res.get("title"),
+                }
+                for k, v in res.items():
+                    if k not in ["recipe_id", "title"]:
+                        if isinstance(v, list):
+                            flat_res[k] = ", ".join(map(str, v))
+                        else:
+                            flat_res[k] = v
+                final_data.append(flat_res)
 
-        final_df = pl.DataFrame(final_data)
+            final_df = pl.DataFrame(final_data)
 
-        if not final_df.is_empty():
-            output_path = CONFIG["OUTPUT_DIR"] / CONFIG["GROUND_TRUTH_FILENAME"]
-            final_df.write_csv(output_path)
-            mlflow.log_artifact(str(output_path), "generated_datasets")
-            logging.info(f"Ground truth generation complete. Saved to {output_path}")
-        else:
-            logging.warning("No results were generated. Skipping artifact logging.")
+            if not final_df.is_empty():
+                output_path = CONFIG["OUTPUT_DIR"] / CONFIG["GROUND_TRUTH_FILENAME"]
+                final_df.write_csv(output_path)
+                mlflow.log_artifact(str(output_path), "generated_datasets")
+                logging.info(
+                    f"Ground truth generation complete. Saved to {output_path}"
+                )
+            else:
+                logging.warning("No results were generated. Skipping artifact logging.")
 
 
 def main():
@@ -608,13 +644,14 @@ def main():
             logging.info(f"Ground truth generation complete. Saved to {output_path}")
 
             # MLflow Logging
-            mlflow.set_tracking_uri(CONFIG["MLFLOW_TRACKING_URI"])
-            with mlflow.start_run(
-                run_name="SOTA Personas Ground Truth Generation"
-            ) as run:
-                logging.info(f"MLflow run started: {run.info.run_id}")
-                mlflow.log_params(CONFIG)
-                mlflow.log_artifact(str(output_path), "generated_datasets")
+            if MLFLOW_AVAILABLE:
+                mlflow.set_tracking_uri(CONFIG["MLFLOW_TRACKING_URI"])
+                with mlflow.start_run(
+                    run_name="SOTA Personas Ground Truth Generation"
+                ) as run:
+                    logging.info(f"MLflow run started: {run.info.run_id}")
+                    mlflow.log_params(CONFIG)
+                    mlflow.log_artifact(str(output_path), "generated_datasets")
         else:
             logging.error("Classification stages failed. No data to save.")
 

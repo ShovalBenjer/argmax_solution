@@ -17,14 +17,22 @@ for the Arctic Text2SQL -> Qwen classification pipeline.
 import json
 import logging
 import re
-import sys
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import polars as pl
-from sqlalchemy import (Boolean, Column, DateTime, Float, Integer, MetaData, String,
-                        Table, create_engine, text)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    text,
+)
 
 # Configure professional logging
 logging.basicConfig(
@@ -33,7 +41,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Import local config
-from config import app_config
+from config import app_config  # noqa: E402
 
 # Database setup
 engine = create_engine(f"sqlite:///{app_config.DB_PATH}")
@@ -92,7 +100,7 @@ ingredient_synonyms_table = Table(
     Column("canonical_name", String, nullable=False),
     Column("synonym", String, nullable=False),
     Column("language_code", String),  # 'en', 'es', 'fr', etc.
-    Column("region_code", String),    # 'US', 'UK', 'IN', etc.
+    Column("region_code", String),  # 'US', 'UK', 'IN', etc.
     Column("confidence", Float, default=1.0),
     Column("discovered_at", DateTime, default=datetime.utcnow),
 )
@@ -114,7 +122,9 @@ ingredient_contexts_table = Table(
     Column("id", Integer, primary_key=True),
     Column("ingredient", String, nullable=False),
     Column("context_clue", String, nullable=False),
-    Column("context_type", String),  # 'animal_indicator', 'plant_indicator', 'ambiguous'
+    Column(
+        "context_type", String
+    ),  # 'animal_indicator', 'plant_indicator', 'ambiguous'
     Column("confidence", Float, default=1.0),
     Column("discovered_at", DateTime, default=datetime.utcnow),
 )
@@ -153,23 +163,47 @@ def create_database_schema() -> None:
         )
         # Enhanced indexes for generalized analysis
         connection.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_synonyms_canonical ON ingredient_synonyms (canonical_name);")
+            text(
+                (
+                    "CREATE INDEX IF NOT EXISTS idx_synonyms_canonical ON ingredient_synonyms "
+                    "(canonical_name);"
+                )
+            )
         )
         connection.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_synonyms_synonym ON ingredient_synonyms (synonym);")
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_synonyms_synonym ON ingredient_synonyms (synonym);"
+            )
         )
         connection.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_hierarchies_parent ON ingredient_hierarchies (parent_ingredient);")
+            text(
+                (
+                    "CREATE INDEX IF NOT EXISTS idx_hierarchies_parent ON ingredient_hierarchies "
+                    "(parent_ingredient);"
+                )
+            )
         )
         connection.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_hierarchies_child ON ingredient_hierarchies (child_ingredient);")
+            text(
+                (
+                    "CREATE INDEX IF NOT EXISTS idx_hierarchies_child ON ingredient_hierarchies "
+                    "(child_ingredient);"
+                )
+            )
         )
         connection.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_contexts_ingredient ON ingredient_contexts (ingredient);")
+            text(
+                (
+                    "CREATE INDEX IF NOT EXISTS idx_contexts_ingredient ON ingredient_contexts "
+                    "(ingredient);"
+                )
+            )
         )
         connection.commit()
 
-    logger.info("Database schema created successfully with optimized indexes for generalized analysis")
+    logger.info(
+        "Database schema created successfully with optimized indexes for generalized analysis"
+    )
 
 
 def clean_numeric_value(value_str: Any) -> float:
@@ -324,7 +358,10 @@ def ingest_nutrition_data() -> None:
         sample_data = df_clean.head(3).to_dicts()
         for row in sample_data:
             logger.info(
-                f"  {row['name']}: calories={row.get('calories', 'N/A')}, carbs={row.get('carbohydrate_g', 'N/A')}"
+                (
+                    f"  {row['name']}: calories={row.get('calories', 'N / A')}, "
+                    f"carbs={row.get('carbohydrate_g', 'N / A')}"
+                )
             )
 
         # Insert into database
@@ -333,7 +370,11 @@ def ingest_nutrition_data() -> None:
             connection.commit()
 
         logger.info(
-            f"Successfully ingested {len(df_clean)} nutrition records with {len(available_cols)-1} nutrients"
+            (
+                f"Successfully ingested {len(df_clean)} nutrition records with "
+                f"{len(available_cols) - 1} "
+                f"nutrients"
+            )
         )
 
         # Verify data was inserted correctly
@@ -530,12 +571,18 @@ def validate_data_quality() -> Dict[str, Any]:
             ),
         }
 
-        logger.info(f"Validation Results:")
+        logger.info("Validation Results:")
         logger.info(
-            f"  Nutrition: {nutrition_count} total, {non_zero_calories} with calories > 0 ({validation_results['calories_success_rate']:.1%})"
+            (
+                f"  Nutrition: {nutrition_count} total, {non_zero_calories} with calories > 0 "
+                f"({validation_results['calories_success_rate']:.1%})"
+            )
         )
         logger.info(
-            f"  Vegan: {vegan_count} total, {with_aliases} with aliases ({validation_results['aliases_success_rate']:.1%})"
+            (
+                f"  Vegan: {vegan_count} total, {with_aliases} with aliases "
+                f"({validation_results['aliases_success_rate']:.1%})"
+            )
         )
         logger.info(f"  Units: {unit_count} conversions")
 

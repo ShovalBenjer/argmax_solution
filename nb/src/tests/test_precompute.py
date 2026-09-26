@@ -5,6 +5,7 @@ Quick Test of Pre-computation Pipeline
 Tests the SOTA semantic classifier on a small sample of ingredients
 to verify the event loop fixes and performance.
 """
+
 import sys
 import time
 from pathlib import Path
@@ -12,7 +13,7 @@ from pathlib import Path
 # Add nb/src to path for accessing modules
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "nb" / "src"))
 
-from diet_classifiers import is_keto, is_vegan
+from diet_classifiers import is_keto, is_vegan  # noqa: E402
 
 
 def test_precomputation():
@@ -91,7 +92,7 @@ def test_precomputation():
     print(f"Successful: {len(successful)}/{len(test_ingredients)}")
     print(f"Errors: {len(errors)}/{len(test_ingredients)}")
     print(f"Total time: {total_time:.2f}s")
-    print(f"Average time: {total_time/len(test_ingredients):.2f}s per ingredient")
+    print(f"Average time: {total_time / len(test_ingredients):.2f}s per ingredient")
 
     if successful:
         avg_success_time = sum(r["time"] for r in successful) / len(successful)
@@ -102,13 +103,11 @@ def test_precomputation():
         print(f"Estimated time for 8,789 ingredients: {estimated_hours:.1f} hours")
 
     if errors:
-        print(f"\nError details:")
+        print("\nError details:")
         for error in errors:
             print(f"   • {error['ingredient']}: {error['error']}")
 
-    print(
-        f"\n{'SUCCESS' if len(successful) >= 3 else 'NEEDS WORK'}: Test completed"
-    )
+    print(f"\n{'SUCCESS' if len(successful) >= 3 else 'NEEDS WORK'}: Test completed")
     return len(successful), len(errors)
 
 
@@ -116,9 +115,9 @@ if __name__ == "__main__":
     successful, errors = test_precomputation()
 
     if successful >= 3:
-        print(f"\nReady to run full pre-computation!")
+        print("\nReady to run full pre-computation!")
         print("   Run: python scripts/05_precompute_classifications.py --batch-size 10")
     else:
-        print(f"\nFix issues before running full pre-computation")
+        print("\nFix issues before running full pre-computation")
 
     sys.exit(0 if errors == 0 else 1)

@@ -30,14 +30,11 @@ Example:
 """
 
 import asyncio
-import sys
 import threading
-import time
 from typing import List, Union
 
-from loguru import logger
-
 from context_aware_classifier import SOTASemanticClassifier
+from loguru import logger
 from unified_ingredient_parser import parse_ingredients_input
 
 # Initialize the single, unified classifier
@@ -49,6 +46,7 @@ class AsyncRunner:
     Manages a dedicated thread with a persistent event loop for async operations.
     This allows running async functions from a synchronous context.
     """
+
     def __init__(self):
         self.loop = asyncio.new_event_loop()
         self.thread = threading.Thread(target=self.loop.run_forever, daemon=True)
@@ -64,6 +62,7 @@ class AsyncRunner:
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
         self.thread.join(timeout=5)
+
 
 # Global async runner instance
 _async_runner = AsyncRunner()
@@ -108,13 +107,15 @@ def is_keto(ingredients: Union[str, List[str]]) -> bool:
     try:
         ingredients_list = parse_ingredients_input(ingredients)
         if not ingredients_list:
-            return True # An empty recipe is considered keto
+            return True  # An empty recipe is considered keto
 
         result = _async_runner.run_coroutine(
             context_classifier.classify_recipe(ingredients_list)
         )
         is_keto_result = result.get("recipe_is_keto", False)
-        logger.info(f"Keto recipe classification: {len(ingredients_list)} ingredients -> {is_keto_result}")
+        logger.info(
+            f"Keto recipe classification: {len(ingredients_list)} ingredients -> {is_keto_result}"
+        )
         return is_keto_result
     except Exception as e:
         logger.error(f"Keto recipe classification failed: {e}")
@@ -128,13 +129,15 @@ def is_vegan(ingredients: Union[str, List[str]]) -> bool:
     try:
         ingredients_list = parse_ingredients_input(ingredients)
         if not ingredients_list:
-            return True # An empty recipe is considered vegan
+            return True  # An empty recipe is considered vegan
 
         result = _async_runner.run_coroutine(
             context_classifier.classify_recipe(ingredients_list)
         )
         is_vegan_result = result.get("recipe_is_vegan", False)
-        logger.info(f"Vegan recipe classification: {len(ingredients_list)} ingredients -> {is_vegan_result}")
+        logger.info(
+            f"Vegan recipe classification: {len(ingredients_list)} ingredients -> {is_vegan_result}"
+        )
         return is_vegan_result
     except Exception as e:
         logger.error(f"Vegan recipe classification failed: {e}")
@@ -143,10 +146,12 @@ def is_vegan(ingredients: Union[str, List[str]]) -> bool:
 
 # The main execution block is removed to avoid confusion with the dedicated
 # evaluation script. This file should now be treated as a library.
-if __name__ == '__main__':
-    print("This module provides the `is_keto` and `is_vegan` functions for diet classification.")
+if __name__ == "__main__":
+    print(
+        "This module provides the `is_keto` and `is_vegan` functions for diet classification."
+    )
     print("Example usage:")
-    
+
     test_recipe_keto = ["chicken breast", "broccoli", "olive oil"]
     test_recipe_not_keto = ["chicken breast", "white rice", "olive oil"]
     test_recipe_vegan = ["tofu", "broccoli", "soy sauce"]

@@ -41,9 +41,8 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-import json
 
-from llm_client import LLMClient
+from llm_client import LLMClient  # noqa: E402
 
 
 def debug_model_detection():
@@ -95,7 +94,7 @@ def debug_model_detection():
     print(f"Length: {len(models) if models else 'None'}")
 
     if models:
-        print(f"\nModel details:")
+        print("\nModel details:")
         for i, model in enumerate(models):
             print(f"  {i}: {model}")
             print(f"      Type: {type(model)}")
@@ -110,7 +109,7 @@ def debug_model_detection():
         "qwen/qwen3-0.6b-gguf",
     ]
 
-    print(f"\nTesting model availability:")
+    print("\nTesting model availability:")
     for model_name in test_models:
         available = client.is_model_available(model_name)
         print(f"  {model_name}: {available}")
