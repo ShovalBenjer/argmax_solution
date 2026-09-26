@@ -166,7 +166,7 @@ class LLMClient:
             try:
                 import requests
 
-                response = requests.get(f"{self.host}/api/tags")
+                response = requests.get(f"{self.host}/api/tags", timeout=10)
                 response.raise_for_status()  # Raise an exception for HTTP errors
                 data = response.json()
                 fallback_models = data.get("models", [])

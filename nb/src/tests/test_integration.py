@@ -62,11 +62,11 @@ def test_config_import_and_attributes():
     logger.info("Testing configuration import.")
     from config import app_config
 
-    assert hasattr(app_config, "DB_PATH"), "DB_PATH not found in config"
-    assert hasattr(
+    assert hasattr(app_config, "DB_PATH"), "DB_PATH not found in config"  # nosec B101
+    assert hasattr(  # nosec B101
         app_config, "KETO_CARBS_THRESHOLD"
     ), "KETO_CARBS_THRESHOLD not found in config"
-    assert (
+    assert (  # nosec B101
         app_config.DB_PATH.exists()
     ), f"Database path {app_config.DB_PATH} does not exist. Run the ingestion script."
     logger.info("Configuration import and attributes are valid.")
@@ -95,7 +95,7 @@ def test_database_manager_initialization():
     # Test SQLite connection
     try:
         with db_manager.get_sqlite_connection() as conn:
-            assert conn is not None, "SQLite connection failed."
+            assert conn is not None, "SQLite connection failed."  # nosec B101
         logger.info("SQLite connection successful.")
     except Exception as e:
         pytest.fail(f"SQLite connection test failed with an exception: {e}")
@@ -136,7 +136,7 @@ def test_llm_client_initialization():
     logger.info("Testing LLM client initialization.")
     from llm_client import llm_client
 
-    assert llm_client is not None, "LLM client is None."
+    assert llm_client is not None, "LLM client is None."  # nosec B101
     logger.info("LLM client initialized successfully.")
 
 
@@ -186,7 +186,7 @@ def test_function_calling_handler_instantiation():
 
     try:
         handler = FunctionCallingHandler()
-        assert (
+        assert (  # nosec B101
             handler is not None
         ), "FunctionCallingHandler instantiation returned None."
         logger.info("FunctionCallingHandler instantiated successfully.")
@@ -215,7 +215,9 @@ def test_query_engine_instantiation():
 
     try:
         engine = QueryEngine()
-        assert engine is not None, "QueryEngine instantiation returned None."
+        assert (
+            engine is not None
+        ), "QueryEngine instantiation returned None."  # nosec B101
         logger.info("QueryEngine instantiated successfully.")
     except Exception as e:
         pytest.fail(f"Failed to instantiate QueryEngine: {e}")
@@ -250,11 +252,15 @@ def test_diet_classifiers_entry_points():
 
     try:
         keto_result = is_keto(test_ingredients)
-        assert isinstance(keto_result, bool), "is_keto should return a boolean."
+        assert isinstance(
+            keto_result, bool
+        ), "is_keto should return a boolean."  # nosec B101
         logger.info(f"is_keto returned: {keto_result}")
 
         vegan_result = is_vegan(test_ingredients)
-        assert isinstance(vegan_result, bool), "is_vegan should return a boolean."
+        assert isinstance(
+            vegan_result, bool
+        ), "is_vegan should return a boolean."  # nosec B101
         logger.info(f"is_vegan returned: {vegan_result}")
 
         logger.info("Diet classifier entry points work correctly.")

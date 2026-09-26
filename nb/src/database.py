@@ -131,7 +131,9 @@ class DatabaseManager:
         logger.info(f"Loading '{table_name}' table into memory for fuzzy lookup...")
         try:
             with self.get_sqlite_connection() as conn:
-                df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+                df = pd.read_sql_query(
+                    f"SELECT * FROM {table_name}", conn
+                )  # nosec B608
                 # For vegan_ontology, parse aliases if they are stored as JSON strings
                 if table_name == "vegan_ontology" and "aliases" in df.columns:
                     df["aliases"] = df["aliases"].apply(

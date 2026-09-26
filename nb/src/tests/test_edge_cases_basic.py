@@ -39,4 +39,4 @@ def test_basic():
     Raises:
         AssertionError: If basic system functionality is not available
     """
-    assert True
+    assert True  # nosec B101

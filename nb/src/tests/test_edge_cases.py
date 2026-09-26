@@ -38,7 +38,7 @@ def test_basic_functionality():
     Test Case:
         Simple assertion to verify test framework functionality
     """
-    assert True  # Placeholder test
+    assert True  # Placeholder test  # nosec B101
 
 
 if __name__ == "__main__":

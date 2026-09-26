@@ -16,7 +16,7 @@ The DeepEval tests cover:
 Key Test Components:
 1. FunctionCallingHandler: Converts ingredients to structured JSON queries
 2. QueryEngine: Safely executes JSON queries against the database
-3. ContextAwareDietClassifier: Orchestrates the full pipeline
+3. SOTASemanticClassifier: Orchestrates the full pipeline
 4. Final judge model: Makes classifications based on retrieved facts
 
 DeepEval Metrics Used:
@@ -92,7 +92,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from context_aware_classifier import ContextAwareDietClassifier  # noqa: E402
+from context_aware_classifier import SOTASemanticClassifier  # noqa: E402
 
 # Import the components to be tested
 from function_calling_handler import FunctionCallingHandler  # noqa: E402
@@ -257,11 +257,13 @@ async def test_function_calling_handler_structure():
         result = await handler.generate_structured_query(test_ingredient)
 
         # Validate the structure
-        assert isinstance(
+        assert isinstance(  # nosec B101
             result, dict
         ), "Function calling handler should return a dictionary"
-        assert "query_type" in result, "Result should contain query_type"
-        assert "ingredient_name" in result, "Result should contain ingredient_name"
+        assert "query_type" in result, "Result should contain query_type"  # nosec B101
+        assert (
+            "ingredient_name" in result
+        ), "Result should contain ingredient_name"  # nosec B101
 
         # Define evaluation metric for structured output
         structure_metric = GEval(
@@ -326,7 +328,9 @@ async def test_query_engine_safety_and_execution():
         result = await engine.execute_structured_query(safe_query)
 
         # Validate result structure
-        assert isinstance(result, dict), "Query engine should return a dictionary"
+        assert isinstance(
+            result, dict
+        ), "Query engine should return a dictionary"  # nosec B101
 
         # Test with potentially unsafe query (should be rejected)
         unsafe_query = {
@@ -337,7 +341,7 @@ async def test_query_engine_safety_and_execution():
         unsafe_result = await engine.execute_structured_query(unsafe_query)
 
         # The query should either be sanitized or return an error, not execute malicious SQL
-        assert "error" in unsafe_result or "sanitized" in str(
+        assert "error" in unsafe_result or "sanitized" in str(  # nosec B101
             unsafe_result
         ), "Unsafe queries should be handled safely"
 
@@ -372,7 +376,7 @@ async def test_context_retrieval_relevancy():
         pytest.fail: If relevancy evaluation fails
     """
 
-    classifier = ContextAwareDietClassifier()
+    classifier = SOTASemanticClassifier()
     test_ingredient = "butter"
 
     try:
@@ -424,7 +428,7 @@ async def test_classification_factual_consistency():
         pytest.fail: If factual consistency evaluation fails
     """
 
-    classifier = ContextAwareDietClassifier()
+    classifier = SOTASemanticClassifier()
 
     # Test case: Recipe with obvious animal product
     test_ingredients = ["chicken breast", "olive oil", "salt"]
@@ -508,7 +512,7 @@ async def test_end_to_end_pipeline_coherence():
         pytest.fail: If coherence evaluation fails
     """
 
-    classifier = ContextAwareDietClassifier()
+    classifier = SOTASemanticClassifier()
 
     # Test case: Mixed recipe with both vegan and non-vegan ingredients
     test_recipe = {

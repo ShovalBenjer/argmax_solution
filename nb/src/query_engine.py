@@ -177,6 +177,7 @@ def translate_json_to_sql(query: Dict[str, Any]) -> tuple[str, List[Any]]:
             if order_field in allowed_columns and order_direction in ["ASC", "DESC"]:
                 order_by_clause = f" ORDER BY {order_field} {order_direction}"
 
+        # nosec B608 - table/fields are internal, not user input
         sql = f"SELECT {fields_str} FROM {table}{where_clause}{order_by_clause}{limit_clause};"
 
     elif operation == "aggregate":
@@ -207,7 +208,7 @@ def translate_json_to_sql(query: Dict[str, Any]) -> tuple[str, List[Any]]:
                 raise ValueError(f"Disallowed GROUP BY field: {group_by}")
 
                 sql = (
-                    f"SELECT {aggregation_type}({aggregation_field}) FROM "
+                    f"SELECT {aggregation_type}({aggregation_field}) FROM "  # nosec B608
                     f"{table}{where_clause}{group_by_clause};"
                 )
 

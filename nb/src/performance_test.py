@@ -187,8 +187,8 @@ def load_random_recipes(n_samples: int = 5000) -> List[Dict[str, Any]]:
             nutrition_names = nutrition_df.to_pandas().iloc[:, 0].tolist()
 
             for i in range(min(n_samples - len(all_recipes), len(nutrition_names) * 3)):
-                base_ingredient = random.choice(nutrition_names)
-                template = random.choice(ingredients_templates)
+                base_ingredient = random.choice(nutrition_names)  # nosec B311
+                template = random.choice(ingredients_templates)  # nosec B311
                 ingredients = [template[0].format(base_ingredient)] + template[1:]
 
                 recipe = {
@@ -201,7 +201,7 @@ def load_random_recipes(n_samples: int = 5000) -> List[Dict[str, Any]]:
 
     # Randomly sample the requested number
     if len(all_recipes) > n_samples:
-        all_recipes = random.sample(all_recipes, n_samples)
+        all_recipes = random.sample(all_recipes, n_samples)  # nosec B311
 
     logger.info(
         f"Successfully loaded {len(all_recipes)} recipes for performance testing"

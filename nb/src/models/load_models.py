@@ -23,7 +23,7 @@ except ImportError:
 def get_existing_models() -> list:
     """Gets a list of names of existing models in Ollama."""
     try:
-        response = requests.get(f"{app_config.OLLAMA_URL}/api/tags")
+        response = requests.get(f"{app_config.OLLAMA_URL}/api/tags", timeout=10)
         response.raise_for_status()
         models = response.json().get("models", [])
         return [m.get("name") for m in models if m.get("name")]

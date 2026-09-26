@@ -20,7 +20,7 @@ def debug_ollama():
 
     # Test basic connection
     try:
-        response = requests.get(f"{ollama_url}/api/tags")
+        response = requests.get(f"{ollama_url}/api/tags", timeout=10)
         print(f"Status Code: {response.status_code}")
         print(f"Response Headers: {dict(response.headers)}")
 
@@ -52,7 +52,7 @@ def debug_ollama():
     print("\n" + "=" * 50)
     print("Testing /api/list endpoint...")
     try:
-        response = requests.get(f"{ollama_url}/api/list")
+        response = requests.get(f"{ollama_url}/api/list", timeout=10)
         print(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
