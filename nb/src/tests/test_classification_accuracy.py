@@ -51,13 +51,11 @@ Example:
     >>> # Run complete accuracy validation
     >>> sys.exit(main())
 """
-import json
+
 import logging
 import sys
 import time
 from pathlib import Path
-
-import polars as pd
 
 # Configure logging
 logging.basicConfig(
@@ -205,7 +203,7 @@ def test_individual_ingredients():
         )
         results["keto_f1"] = keto_f1
         results["vegan_f1"] = vegan_f1
-    except:
+    except Exception:
         results["keto_f1"] = 0.0
         results["vegan_f1"] = 0.0
 
@@ -337,7 +335,7 @@ def test_input_format_compatibility():
     Example:
         >>> results = test_input_format_compatibility()
         >>> for i, result in enumerate(results):
-        >>>     print(f"Format {i+1}: {result}")
+        >>>     print(f"Format {i + 1}: {result}")
     """
     from diet_classifiers import is_keto, is_vegan
 
@@ -359,9 +357,9 @@ def test_input_format_compatibility():
             keto_result = is_keto(ingredients)
             vegan_result = is_vegan(ingredients)
             results.append((keto_result, vegan_result))
-            logger.info(f"  Format {i+1}: keto={keto_result}, vegan={vegan_result}")
+            logger.info(f"  Format {i + 1}: keto={keto_result}, vegan={vegan_result}")
         except Exception as e:
-            logger.error(f"  Format {i+1}: FAILED - {e}")
+            logger.error(f"  Format {i + 1}: FAILED - {e}")
             results.append((False, False))
 
     # All formats should give same result
@@ -404,11 +402,13 @@ def main():
         )
 
         logger.info(
-            f"{'PASS' if keto_acc_met else 'WARNING'} Keto Accuracy: {all_results['keto_accuracy']:.3f} "
+            f"{'PASS' if keto_acc_met else 'WARNING'} Keto Accuracy: "
+            f"{all_results['keto_accuracy']:.3f} "
             f"(benchmark: {BENCHMARKS['keto_accuracy_min']:.3f})"
         )
         logger.info(
-            f"{'PASS' if vegan_acc_met else 'WARNING'} Vegan Accuracy: {all_results['vegan_accuracy']:.3f} "
+            f"{'PASS' if vegan_acc_met else 'WARNING'} Vegan Accuracy: "
+            f"{all_results['vegan_accuracy']:.3f} "
             f"(benchmark: {BENCHMARKS['vegan_accuracy_min']:.3f})"
         )
 
@@ -441,11 +441,13 @@ def main():
         )
 
         logger.info(
-            f"{'PASS' if time_met else 'WARNING'} Avg Processing Time: {all_results['avg_processing_time']:.2f}s "
+            f"{'PASS' if time_met else 'WARNING'} Avg Processing Time: "
+            f"{all_results['avg_processing_time']:.2f}s "
             f"(benchmark: {BENCHMARKS['max_processing_time_per_ingredient']:.2f}s)"
         )
         logger.info(
-            f"{'PASS' if recipe_time_met else 'WARNING'} Avg Recipe Time: {all_results['avg_recipe_processing_time']:.2f}s "
+            f"{'PASS' if recipe_time_met else 'WARNING'} Avg Recipe Time: "
+            f"{all_results['avg_recipe_processing_time']:.2f}s "
             f"(benchmark: {BENCHMARKS['max_processing_time_per_recipe']:.2f}s)"
         )
 
@@ -453,7 +455,9 @@ def main():
 
         # Format compatibility
         format_met = all_results["format_compatibility"]
-        logger.info(f"{'PASS' if format_met else 'WARNING'} Format Compatibility: {format_met}")
+        logger.info(
+            f"{'PASS' if format_met else 'WARNING'} Format Compatibility: {format_met}"
+        )
         benchmarks_met.append(format_met)
 
         # Overall status

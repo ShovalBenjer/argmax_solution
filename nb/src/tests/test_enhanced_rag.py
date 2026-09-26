@@ -31,7 +31,7 @@ Test Features:
 
 Dependencies:
 - asyncio: Asynchronous testing support
-- ContextAwareDietClassifier: Main classification system
+- SOTASemanticClassifier: Main classification system
 
 Example:
     >>> python nb/src/tests/test_enhanced_rag.py
@@ -41,7 +41,7 @@ Example:
 
 import asyncio
 
-from context_aware_classifier import ContextAwareDietClassifier
+from context_aware_classifier import SOTASemanticClassifier
 
 
 async def test_enhanced_rag_pipeline():
@@ -78,7 +78,7 @@ async def test_enhanced_rag_pipeline():
         >>> await test_enhanced_rag_pipeline()
         >>> # Tests enhanced RAG pipeline with multiple ingredients
     """
-    classifier = ContextAwareDietClassifier()
+    classifier = SOTASemanticClassifier()
 
     print("Testing Enhanced RAG Pipeline with Fallback Mechanism")
     print("=" * 55)

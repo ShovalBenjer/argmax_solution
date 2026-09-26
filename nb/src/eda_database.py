@@ -1,8 +1,6 @@
-d# eda_database.py
+# eda_database.py
 
-import re
 from collections import Counter
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,11 +8,9 @@ import pandas as pd
 import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from tqdm import tqdm
 
 # --- SOTA Dependencies ---
 try:
-    from config import app_config
     from database import db_manager
 
     DB_AVAILABLE = True
@@ -28,10 +24,17 @@ try:
     PARSER_AVAILABLE = True
 except ImportError:
     print(
-        "Warning: 'ingredient-parser' or 'ingredient_normalizer' not found. Analysis will be less accurate."
+        (
+            "Warning: 'ingredient-parser' or 'ingredient_normalizer' not found. Analysis will be "
+            "less "
+            "accurate."
+        )
     )
     print(
-        "         Ensure 'ingredient-parser-nlp' is installed with: pip install ingredient-parser-nlp"
+        (
+            "         Ensure 'ingredient-parser-nlp' is installed with: pip install "
+            "ingredient-parser-nlp"
+        )
     )
     PARSER_AVAILABLE = False
 
@@ -71,7 +74,10 @@ def load_nutrition_data_from_db() -> pd.DataFrame | None:
         )
         correlation = df[COL_CALORIES].corr(df["calculated_calories"])
         print(
-            f"Calorie Sanity Check: Correlation between reported and calculated calories: {correlation:.4f}"
+            (
+                f"Calorie Sanity Check: Correlation between reported and calculated calories: "
+                f"{correlation:.4f}"
+            )
         )
 
         print(f"Successfully loaded {len(df)} records from 'nutrition_facts'.\n")
@@ -159,7 +165,11 @@ def infer_and_analyze_diets(df_recipes: pd.DataFrame):
     """
     if not PARSER_AVAILABLE:
         print(
-            "Cannot perform NLP analysis because 'ingredient-parser' is not installed or normalizer is unavailable."
+            (
+                "Cannot perform NLP analysis because 'ingredient-parser' is not installed or "
+                "normalizer is "
+                "unavailable."
+            )
         )
         return
 
@@ -216,7 +226,7 @@ def infer_and_analyze_diets(df_recipes: pd.DataFrame):
         ingredients_in_recipe = [
             parse_ingredient_simple(ing_string)
             for ing_string in recipe.get("ingredients", [])
-                          if parse_ingredient_simple(ing_string)
+            if parse_ingredient_simple(ing_string)
         ]
         unique_ingredient_counts.append(len(set(ingredients_in_recipe)))
 
@@ -253,7 +263,11 @@ def infer_and_analyze_diets(df_recipes: pd.DataFrame):
     print(f"Total recipes analyzed: {len(df_recipes)}")
     if top_common_ingredients:
         print(
-            f"Most common ingredient: '{top_common_ingredients[0][0]}' (appears {top_common_ingredients[0][1]} times)"
+            (
+                f"Most common ingredient: '{top_common_ingredients[0][0]}' (appears "
+                f"{top_common_ingredients[0][1]} "
+                f"times)"
+            )
         )
     else:
         print("No common ingredients found.")

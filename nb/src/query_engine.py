@@ -26,8 +26,21 @@ logger = logging.getLogger(__name__)
 # --- Security Whitelists ---
 # Prevents injection by ensuring only known tables and columns are used.
 ALLOWED_TABLES = {
-    "nutrition_facts": ["name", "carbohydrate_g", "fiber_g", "protein_g", "total_fat_g", "*"],
-    "vegan_ontology": ["term", "aliases", "is_explicitly_non_vegan", "description", "*"],
+    "nutrition_facts": [
+        "name",
+        "carbohydrate_g",
+        "fiber_g",
+        "protein_g",
+        "total_fat_g",
+        "*",
+    ],
+    "vegan_ontology": [
+        "term",
+        "aliases",
+        "is_explicitly_non_vegan",
+        "description",
+        "*",
+    ],
 }
 
 ALLOWED_OPERATORS = ["=", "!=", ">", "<", ">=", "<=", "LIKE", "IN"]
@@ -69,11 +82,15 @@ def _validate_query_structure(query: Dict[str, Any]) -> bool:
         raise ValueError("Query must contain 'operation' and 'table' keys")
 
     if query["operation"] not in ["search", "aggregate"]:
-        raise ValueError("Invalid operation specified. Must be 'search' or 'aggregate'.")
+        raise ValueError(
+            "Invalid operation specified. Must be 'search' or 'aggregate'."
+        )
 
     table = query["table"]
     if table not in ALLOWED_TABLES:
-        raise ValueError(f"Disallowed table: '{table}'. Must be one of {list(ALLOWED_TABLES.keys())}")
+        raise ValueError(
+            f"Disallowed table: '{table}'. Must be one of {list(ALLOWED_TABLES.keys())}"
+        )
 
     return True
 
@@ -132,12 +149,12 @@ def translate_json_to_sql(query: Dict[str, Any]) -> tuple[str, List[Any]]:
 
     if operation == "search":
         select_fields = query.get("select_fields", ["*"])
-        
+
         # Security: Validate selected fields
         for field in select_fields:
-            if field != '*' and field not in allowed_columns:
+            if field != "*" and field not in allowed_columns:
                 raise ValueError(f"Disallowed field '{field}' for table '{table}'")
-        
+
         fields_str = ", ".join(select_fields)
 
         filters = query.get("filters")
@@ -160,6 +177,7 @@ def translate_json_to_sql(query: Dict[str, Any]) -> tuple[str, List[Any]]:
             if order_field in allowed_columns and order_direction in ["ASC", "DESC"]:
                 order_by_clause = f" ORDER BY {order_field} {order_direction}"
 
+        # nosec B608 - table/fields are internal, not user input
         sql = f"SELECT {fields_str} FROM {table}{where_clause}{order_by_clause}{limit_clause};"
 
     elif operation == "aggregate":
@@ -168,10 +186,12 @@ def translate_json_to_sql(query: Dict[str, Any]) -> tuple[str, List[Any]]:
 
         if not aggregation_field:
             raise ValueError("Aggregation operation requires 'aggregation_field'")
-        
+
         # Security: Validate aggregation field and type
-        if aggregation_field != '*' and aggregation_field not in allowed_columns:
-            raise ValueError(f"Disallowed aggregation field '{aggregation_field}' for table '{table}'")
+        if aggregation_field != "*" and aggregation_field not in allowed_columns:
+            raise ValueError(
+                f"Disallowed aggregation field '{aggregation_field}' for table '{table}'"
+            )
         if aggregation_type not in ALLOWED_AGGREGATIONS:
             raise ValueError(f"Disallowed aggregation type: {aggregation_type}")
 
@@ -187,7 +207,10 @@ def translate_json_to_sql(query: Dict[str, Any]) -> tuple[str, List[Any]]:
             else:
                 raise ValueError(f"Disallowed GROUP BY field: {group_by}")
 
-        sql = f"SELECT {aggregation_type}({aggregation_field}) FROM {table}{where_clause}{group_by_clause};"
+                sql = (
+                    f"SELECT {aggregation_type}({aggregation_field}) FROM "  # nosec B608
+                    f"{table}{where_clause}{group_by_clause};"
+                )
 
     else:
         raise ValueError(f"Unsupported operation type: {operation}")

@@ -51,6 +51,7 @@ Example:
     >>> # Run complete performance benchmark suite
     >>> sys.exit(main())
 """
+
 import json
 import logging
 import os
@@ -226,7 +227,7 @@ def measure_single_classification_performance():
         # Measure keto classification
         try:
             start_time = time.time()
-            result = is_ingredient_keto(ingredient)
+            is_ingredient_keto(ingredient)
             keto_time = (time.time() - start_time) * 1000  # Convert to ms
             keto_times.append(keto_time)
         except Exception as e:
@@ -237,7 +238,7 @@ def measure_single_classification_performance():
         # Measure vegan classification
         try:
             start_time = time.time()
-            result = is_ingredient_vegan(ingredient)
+            is_ingredient_vegan(ingredient)
             vegan_time = (time.time() - start_time) * 1000  # Convert to ms
             vegan_times.append(vegan_time)
         except Exception as e:
@@ -305,7 +306,6 @@ def measure_recipe_classification_performance():
     test_recipes = generate_test_recipes(30)
 
     processing_times = []
-    throughput_measurements = []
     errors = 0
 
     # Measure individual recipe processing
@@ -313,8 +313,8 @@ def measure_recipe_classification_performance():
         start_time = time.time()
 
         try:
-            keto_result = is_keto(recipe["ingredients"])
-            vegan_result = is_vegan(recipe["ingredients"])
+            is_keto(recipe["ingredients"])
+            is_vegan(recipe["ingredients"])
 
             processing_time = (time.time() - start_time) * 1000  # Convert to ms
             processing_times.append(processing_time)
@@ -333,7 +333,7 @@ def measure_recipe_classification_performance():
         try:
             is_keto(recipe["ingredients"])
             is_vegan(recipe["ingredients"])
-        except:
+        except Exception:
             batch_errors += 1
 
     batch_time = time.time() - batch_start
@@ -504,7 +504,8 @@ def main():
             all_results["recipes_per_second"] >= BENCHMARKS["min_recipes_per_second"]
         )
         logger.info(
-            f"{'PASS' if throughput_met else 'WARNING'} Throughput: {all_results['recipes_per_second']:.2f} recipes/sec "
+            f"{'PASS' if throughput_met else 'WARNING'} Throughput: "
+            f"{all_results['recipes_per_second']:.2f} recipes/sec "
             f"(benchmark: {BENCHMARKS['min_recipes_per_second']:.2f})"
         )
         benchmarks_met.append(throughput_met)
@@ -518,11 +519,13 @@ def main():
         )
 
         logger.info(
-            f"{'PASS' if avg_latency_met else 'WARNING'} Avg Latency: {all_results['avg_recipe_latency_ms']:.1f}ms "
+            f"{'PASS' if avg_latency_met else 'WARNING'} Avg Latency: "
+            f"{all_results['avg_recipe_latency_ms']:.1f}ms "
             f"(benchmark: {BENCHMARKS['max_avg_latency_ms']:.1f}ms)"
         )
         logger.info(
-            f"{'PASS' if p95_latency_met else 'WARNING'} P95 Latency: {all_results['p95_recipe_latency_ms']:.1f}ms "
+            f"{'PASS' if p95_latency_met else 'WARNING'} P95 Latency: "
+            f"{all_results['p95_recipe_latency_ms']:.1f}ms "
             f"(benchmark: {BENCHMARKS['max_p95_latency_ms']:.1f}ms)"
         )
 
@@ -531,7 +534,8 @@ def main():
         # Memory benchmark
         memory_met = all_results["peak_memory_gb"] <= BENCHMARKS["max_memory_usage_gb"]
         logger.info(
-            f"{'PASS' if memory_met else 'WARNING'} Peak Memory: {all_results['peak_memory_gb']:.2f}GB "
+            f"{'PASS' if memory_met else 'WARNING'} Peak Memory: "
+            f"{all_results['peak_memory_gb']:.2f}GB "
             f"(benchmark: {BENCHMARKS['max_memory_usage_gb']:.2f}GB)"
         )
         benchmarks_met.append(memory_met)
@@ -539,7 +543,8 @@ def main():
         # Error rate benchmark
         error_rate_met = all_results["error_rate"] <= BENCHMARKS["max_error_rate"]
         logger.info(
-            f"{'PASS' if error_rate_met else 'WARNING'} Error Rate: {all_results['error_rate']:.3f} "
+            f"{'PASS' if error_rate_met else 'WARNING'} Error Rate: "
+            f"{all_results['error_rate']:.3f} "
             f"(benchmark: {BENCHMARKS['max_error_rate']:.3f})"
         )
         benchmarks_met.append(error_rate_met)

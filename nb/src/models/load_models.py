@@ -2,30 +2,34 @@ import json
 import os
 import sys
 from pathlib import Path
+
 import requests
 
 # Add the project root to the Python path to allow importing config
-project_root = Path(__file__).resolve().parent.parent # Go up one level to /src
+project_root = Path(__file__).resolve().parent.parent  # Go up one level to /src
 sys.path.append(str(project_root))
 
 try:
     from config import app_config
 except ImportError:
     print("Warning: Could not import app_config. Using fallback Ollama URL.")
+
     class FallbackConfig:
         OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+
     app_config = FallbackConfig()
 
 
 def get_existing_models() -> list:
     """Gets a list of names of existing models in Ollama."""
     try:
-        response = requests.get(f"{app_config.OLLAMA_URL}/api/tags")
+        response = requests.get(f"{app_config.OLLAMA_URL}/api/tags", timeout=10)
         response.raise_for_status()
         models = response.json().get("models", [])
         return [m.get("name") for m in models if m.get("name")]
     except requests.exceptions.RequestException:
-        return [] # Return empty list if Ollama is not reachable
+        return []  # Return empty list if Ollama is not reachable
+
 
 def create_model_from_file(model_name: str, modelfile_content: str):
     """
@@ -33,10 +37,10 @@ def create_model_from_file(model_name: str, modelfile_content: str):
     """
     api_url = f"{app_config.OLLAMA_URL}/api/create"
     payload = {"name": model_name, "modelfile": modelfile_content}
-    
+
     print(f"Creating model '{model_name}'...")
     print("-" * 40)
-    
+
     try:
         response = requests.post(api_url, json=payload, stream=True, timeout=600)
         response.raise_for_status()
@@ -55,11 +59,17 @@ def create_model_from_file(model_name: str, modelfile_content: str):
                     print(f"\r> Status: {status_display}", end="", flush=True)
                     if "error" in data:
                         print(f"\nERROR: {data['error']}")
-                        print("Hint: This often means the Ollama server cannot access the file path in the 'FROM' instruction.")
+                        print(
+                            (
+                                "Hint: This often means the Ollama server cannot access the file "
+                                "path in the 'FROM' "
+                                "instruction."
+                            )
+                        )
                         success = False
                 except json.JSONDecodeError:
                     print(f"\n[RAW]: {line.decode(errors='ignore')}")
-        
+
         print("\n" + "-" * 40)
         if success and "error" not in data:
             print(f"Successfully processed model '{model_name}'.")
@@ -69,7 +79,12 @@ def create_model_from_file(model_name: str, modelfile_content: str):
             return False
 
     except requests.exceptions.RequestException as e:
-        print(f"\nAPI Error: Failed to connect to Ollama at {api_url}. Is Ollama running and accessible?")
+        print(
+            (
+                f"\nAPI Error: Failed to connect to Ollama at {api_url}. Is Ollama running and "
+                f"accessible?"
+            )
+        )
         print(f"Details: {e}")
         return False
     except Exception as e:
@@ -85,19 +100,19 @@ def load_qwen_model(base_path: Path, existing_models: list):
         return True
 
     model_file = base_path / "qwen3-0.6b-gguf" / "qwen3-0.6b-base-q8_0.gguf"
-    
+
     print(f"Attempting to load Qwen model from: {model_file.resolve()}")
     if not model_file.exists():
-        print(f"ERROR: Qwen model file not found at the specified path!")
+        print("ERROR: Qwen model file not found at the specified path!")
         return False
 
     # Use relative path for Docker container
-    modelfile_content = f"""FROM ./qwen3-0.6b-gguf/qwen3-0.6b-base-q8_0.gguf
+    modelfile_content = """FROM ./qwen3-0.6b-gguf/qwen3-0.6b-base-q8_0.gguf
 
 TEMPLATE "<|im_start|>system
-{{{{ .System }}}}<|im_end|>
+{{ .System }}<|im_end|>
 <|im_start|>user
-{{{{ .Prompt }}}}<|im_end|>
+{{ .Prompt }}<|im_end|>
 <|im_start|>assistant
 "
 
@@ -110,7 +125,7 @@ PARAMETER num_ctx 4096
 
 def load_arctic_model(base_path: Path, existing_models: list):
     """Load Arctic Text2SQL model into Ollama."""
-    model_name = "arctic-text2sql:latest" # Use a standard tag
+    model_name = "arctic-text2sql:latest"  # Use a standard tag
     if model_name in existing_models:
         print(f"Model '{model_name}' already exists. Skipping.")
         return True
@@ -125,16 +140,16 @@ def load_arctic_model(base_path: Path, existing_models: list):
     if not found_files:
         print(f"ERROR: No .gguf files found in {arctic_dir.resolve()}")
         return False
-    
-    model_file = found_files[0] # Use the first GGUF file found in the directory
-    
+
+    model_file = found_files[0]  # Use the first GGUF file found in the directory
+
     print(f"Found and attempting to load Arctic model from: {model_file.resolve()}")
 
     # Use relative path for Docker container
-    modelfile_content = f"""FROM ./Arctic-Text2SQL-R1-7B-GGUF/Arctic-Text2SQL-R1-7B.Q2_K.gguf
+    modelfile_content = """FROM ./Arctic-Text2SQL-R1-7B-GGUF/Arctic-Text2SQL-R1-7B.Q2_K.gguf
 
-TEMPLATE "{{{{ .Prompt }}}}"
- 
+TEMPLATE "{{ .Prompt }}"
+
 PARAMETER stop ";"
 PARAMETER num_ctx 8192
 """
@@ -155,7 +170,7 @@ def list_models_summary():
 
 if __name__ == "__main__":
     print("--- Starting Model Loader for Ollama ---")
-    
+
     # The base path where the model directories (qwen3-0.6b-gguf, etc.) are located.
     # This should be the directory where the script is located (src/models)
     models_base_path = Path(__file__).parent
@@ -164,7 +179,9 @@ if __name__ == "__main__":
     print("Checking for existing models...")
     existing_models = get_existing_models()
     if not existing_models:
-        print("Could not reach Ollama to check for existing models. Will attempt to create them.")
+        print(
+            "Could not reach Ollama to check for existing models. Will attempt to create them."
+        )
 
     qwen_success = load_qwen_model(models_base_path, existing_models)
     arctic_success = load_arctic_model(models_base_path, existing_models)
@@ -175,4 +192,6 @@ if __name__ == "__main__":
     if qwen_success and arctic_success:
         print("\nSUCCESS: All required models are available in Ollama!")
     else:
-        print("\nWARNING: One or more models could not be loaded. Please check the errors above.")
+        print(
+            "\nWARNING: One or more models could not be loaded. Please check the errors above."
+        )

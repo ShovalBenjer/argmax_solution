@@ -45,18 +45,13 @@ Example:
 
 import json
 import random
-import sys
 import time
-from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
-import numba as np
-import polars as pd
 import polars as pl
 import seaborn as sns
-from database import db_manager
 from diet_classifiers import is_keto, is_vegan
 from loguru import logger
 
@@ -140,7 +135,8 @@ def load_random_recipes(n_samples: int = 5000) -> List[Dict[str, Any]]:
     Detailed Description:
         - Sources data for the performance test.
         - Attempts to load recipes from a primary ground truth CSV file.
-        - Generates synthetic recipes if needed, using a base list of ingredients from a nutrition CSV file.
+        - Generates synthetic recipes if needed, using a base list of ingredients
+          from a nutrition CSV file.
 
     Parameters:
         - n_samples (int): The target number of random recipes to load.
@@ -150,15 +146,6 @@ def load_random_recipes(n_samples: int = 5000) -> List[Dict[str, Any]]:
 
     """
     logger.info(f"Loading {n_samples} random recipes from available sources...")
-
-    # Try to load from different sources
-    data_sources = [
-        Path("nb/src/evaluation_data/ground_truth_sample.csv"),
-        Path("nb/src/raw_data/nutrition.csv"),
-        Path("nb/src/evaluation_data/strict_keto.csv"),
-        Path("nb/src/evaluation_data/strict_vegan.csv"),
-        Path("nb/src/evaluation_data/borderline_keto.csv"),
-    ]
 
     all_recipes = []
 
@@ -200,8 +187,8 @@ def load_random_recipes(n_samples: int = 5000) -> List[Dict[str, Any]]:
             nutrition_names = nutrition_df.to_pandas().iloc[:, 0].tolist()
 
             for i in range(min(n_samples - len(all_recipes), len(nutrition_names) * 3)):
-                base_ingredient = random.choice(nutrition_names)
-                template = random.choice(ingredients_templates)
+                base_ingredient = random.choice(nutrition_names)  # nosec B311
+                template = random.choice(ingredients_templates)  # nosec B311
                 ingredients = [template[0].format(base_ingredient)] + template[1:]
 
                 recipe = {
@@ -214,7 +201,7 @@ def load_random_recipes(n_samples: int = 5000) -> List[Dict[str, Any]]:
 
     # Randomly sample the requested number
     if len(all_recipes) > n_samples:
-        all_recipes = random.sample(all_recipes, n_samples)
+        all_recipes = random.sample(all_recipes, n_samples)  # nosec B311
 
     logger.info(
         f"Successfully loaded {len(all_recipes)} recipes for performance testing"
@@ -331,16 +318,16 @@ def run_performance_test(
 
     logger.success("Performance Test Complete!")
     logger.info(f"Processed {actual_samples} recipes in {total_time:.2f} seconds")
-    logger.info(f"Average time per recipe: {avg_time_per_recipe*1000:.2f}ms")
+    logger.info(f"Average time per recipe: {avg_time_per_recipe * 1000:.2f}ms")
     logger.info(f"Throughput: {throughput:.1f} recipes/second")
     logger.info(
-        f"Vegan recipes: {vegan_count} ({vegan_count/len(vegan_predictions)*100:.1f}%)"
+        f"Vegan recipes: {vegan_count} ({vegan_count / len(vegan_predictions) * 100:.1f}%)"
     )
     logger.info(
-        f"Keto recipes: {keto_count} ({keto_count/len(keto_predictions)*100:.1f}%)"
+        f"Keto recipes: {keto_count} ({keto_count / len(keto_predictions) * 100:.1f}%)"
     )
     logger.info(
-        f"Both vegan & keto: {both_count} ({both_count/len(vegan_predictions)*100:.1f}%)"
+        f"Both vegan & keto: {both_count} ({both_count / len(vegan_predictions) * 100:.1f}%)"
     )
 
     if save_results:
@@ -411,7 +398,7 @@ def create_performance_visualizations(
         else 0
     )
     ax1.axvline(
-        mean_time, color="red", linestyle="--", label=f"Mean: {mean_time*1000:.1f}ms"
+        mean_time, color="red", linestyle="--", label=f"Mean: {mean_time * 1000:.1f}ms"
     )
     ax1.legend()
 
@@ -544,7 +531,7 @@ def create_summary_report(results: Dict[str, Any], output_dir: Path):
             f"Total Execution Time: {perf['total_execution_time_seconds']:.2f} seconds\n"
         )
         f.write(
-            f"Average Time per Recipe: {perf['average_time_per_recipe_seconds']*1000:.2f} ms\n"
+            f"Average Time per Recipe: {perf['average_time_per_recipe_seconds'] * 1000:.2f} ms\n"
         )
         f.write(
             f"Throughput: {perf['throughput_recipes_per_second']:.1f} recipes/second\n"
@@ -568,10 +555,10 @@ def create_summary_report(results: Dict[str, Any], output_dir: Path):
         f.write("TIMING STATISTICS:\n")
         f.write("-" * 30 + "\n")
         timing = results["timing_statistics"]
-        f.write(f"Min Recipe Time: {timing['min_recipe_time']*1000:.2f} ms\n")
-        f.write(f"Max Recipe Time: {timing['max_recipe_time']*1000:.2f} ms\n")
-        f.write(f"Median Recipe Time: {timing['median_recipe_time']*1000:.2f} ms\n")
-        f.write(f"Standard Deviation: {timing['std_recipe_time']*1000:.2f} ms\n")
+        f.write(f"Min Recipe Time: {timing['min_recipe_time'] * 1000:.2f} ms\n")
+        f.write(f"Max Recipe Time: {timing['max_recipe_time'] * 1000:.2f} ms\n")
+        f.write(f"Median Recipe Time: {timing['median_recipe_time'] * 1000:.2f} ms\n")
+        f.write(f"Standard Deviation: {timing['std_recipe_time'] * 1000:.2f} ms\n")
 
     logger.info(f"Saved summary report to {report_path}")
 

@@ -41,15 +41,14 @@ Example:
     >>> test_opensearch()
 """
 
-import os
 import sys
 from pathlib import Path
 
 # Add shared package to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from opensearchpy import OpenSearch
-from shared.config import app_config
+from config import app_config  # noqa: E402
+from opensearchpy import OpenSearch  # noqa: E402
 
 
 def test_opensearch():

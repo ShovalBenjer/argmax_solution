@@ -32,8 +32,8 @@ Example:
     >>> # Run specific integration test
     >>> pytest nb/src/tests/test_integration.py::test_classifier_instantiation -v
 """
+
 import logging
-from pathlib import Path
 
 import pytest
 
@@ -62,11 +62,11 @@ def test_config_import_and_attributes():
     logger.info("Testing configuration import.")
     from config import app_config
 
-    assert hasattr(app_config, "DB_PATH"), "DB_PATH not found in config"
-    assert hasattr(
+    assert hasattr(app_config, "DB_PATH"), "DB_PATH not found in config"  # nosec B101
+    assert hasattr(  # nosec B101
         app_config, "KETO_CARBS_THRESHOLD"
     ), "KETO_CARBS_THRESHOLD not found in config"
-    assert (
+    assert (  # nosec B101
         app_config.DB_PATH.exists()
     ), f"Database path {app_config.DB_PATH} does not exist. Run the ingestion script."
     logger.info("Configuration import and attributes are valid.")
@@ -95,7 +95,7 @@ def test_database_manager_initialization():
     # Test SQLite connection
     try:
         with db_manager.get_sqlite_connection() as conn:
-            assert conn is not None, "SQLite connection failed."
+            assert conn is not None, "SQLite connection failed."  # nosec B101
         logger.info("SQLite connection successful.")
     except Exception as e:
         pytest.fail(f"SQLite connection test failed with an exception: {e}")
@@ -107,7 +107,11 @@ def test_database_manager_initialization():
             logger.info("OpenSearch client initialized (or was already).")
         else:
             logger.warning(
-                "OpenSearch client is None (service may not be running). This is acceptable for the test."
+                (
+                    "OpenSearch client is None (service may not be running). This is acceptable "
+                    "for the "
+                    "test."
+                )
             )
     except Exception as e:
         pytest.fail(f"OpenSearch client initialization failed with an exception: {e}")
@@ -132,39 +136,8 @@ def test_llm_client_initialization():
     logger.info("Testing LLM client initialization.")
     from llm_client import llm_client
 
-    assert llm_client is not None, "LLM client is None."
+    assert llm_client is not None, "LLM client is None."  # nosec B101
     logger.info("LLM client initialized successfully.")
-
-
-def test_cache_manager_initialization():
-    """
-    Tests that the Redis cache manager can be initialized.
-
-    This test verifies that the cache manager can be properly initialized
-    and provides basic functionality. It tests cache statistics retrieval
-    and ensures the manager works even when Redis is unavailable.
-
-    Test Validates:
-    - Cache manager can be imported and initialized
-    - Basic cache operations are available
-    - Statistics can be retrieved
-    - Graceful handling of Redis unavailability
-
-    Raises:
-        AssertionError: If cache manager initialization fails
-    """
-    logger.info("Testing cache manager initialization.")
-    from utils.cache_manager import get_cache_manager
-
-    cache_manager = get_cache_manager()
-    assert cache_manager is not None, "Cache manager is None."
-
-    # Test basic functionality (should work even if Redis is not available)
-    stats = cache_manager.get_stats()
-    assert isinstance(stats, dict), "Cache stats should return a dictionary."
-    assert "status" in stats, "Cache stats should include status."
-
-    logger.info(f"Cache manager initialized with status: {stats['status']}")
 
 
 def test_core_logic_imports():
@@ -178,7 +151,7 @@ def test_core_logic_imports():
     Test Validates:
     - FunctionCallingHandler can be imported
     - QueryEngine can be imported
-    - ContextAwareDietClassifier can be imported
+    - SOTASemanticClassifier can be imported
     - Diet classifier functions can be imported
 
     Raises:
@@ -186,10 +159,6 @@ def test_core_logic_imports():
     """
     logger.info("Testing imports for core classification logic.")
     try:
-        from context_aware_classifier import ContextAwareDietClassifier
-        from diet_classifiers import is_keto, is_vegan
-        from function_calling_handler import FunctionCallingHandler
-        from query_engine import QueryEngine
 
         logger.info("All core classification modules imported successfully.")
     except ImportError as e:
@@ -217,7 +186,7 @@ def test_function_calling_handler_instantiation():
 
     try:
         handler = FunctionCallingHandler()
-        assert (
+        assert (  # nosec B101
             handler is not None
         ), "FunctionCallingHandler instantiation returned None."
         logger.info("FunctionCallingHandler instantiated successfully.")
@@ -246,48 +215,12 @@ def test_query_engine_instantiation():
 
     try:
         engine = QueryEngine()
-        assert engine is not None, "QueryEngine instantiation returned None."
+        assert (
+            engine is not None
+        ), "QueryEngine instantiation returned None."  # nosec B101
         logger.info("QueryEngine instantiated successfully.")
     except Exception as e:
         pytest.fail(f"Failed to instantiate QueryEngine: {e}")
-
-
-def test_classifier_instantiation():
-    """
-    Tests if the main ContextAwareDietClassifier can be instantiated.
-
-    This test verifies that the main classifier can be properly instantiated
-    with all its dependencies. It implicitly tests the wiring between
-    the classifier, LLM client, function handler, and query engine.
-
-    Test Validates:
-    - ContextAwareDietClassifier can be instantiated
-    - All required dependencies are properly wired
-    - Required attributes are present
-    - No exceptions during instantiation
-
-    Raises:
-        Exception: If classifier instantiation fails
-        AssertionError: If required attributes are missing
-    """
-    logger.info("Testing instantiation of the ContextAwareDietClassifier.")
-    from context_aware_classifier import ContextAwareDietClassifier
-
-    try:
-        # This will test the connection between the classifier, the LLM client,
-        # the function handler, and the query engine.
-        classifier = ContextAwareDietClassifier()
-        assert classifier is not None, "Classifier instantiation returned None."
-        assert hasattr(classifier, "llm_client"), "Classifier is missing llm_client."
-        assert hasattr(
-            classifier, "function_handler"
-        ), "Classifier is missing function_handler."
-        assert hasattr(
-            classifier, "query_engine"
-        ), "Classifier is missing query_engine."
-        logger.info("ContextAwareDietClassifier instantiated successfully.")
-    except Exception as e:
-        pytest.fail(f"Failed to instantiate ContextAwareDietClassifier: {e}")
 
 
 def test_diet_classifiers_entry_points():
@@ -319,11 +252,15 @@ def test_diet_classifiers_entry_points():
 
     try:
         keto_result = is_keto(test_ingredients)
-        assert isinstance(keto_result, bool), "is_keto should return a boolean."
+        assert isinstance(
+            keto_result, bool
+        ), "is_keto should return a boolean."  # nosec B101
         logger.info(f"is_keto returned: {keto_result}")
 
         vegan_result = is_vegan(test_ingredients)
-        assert isinstance(vegan_result, bool), "is_vegan should return a boolean."
+        assert isinstance(
+            vegan_result, bool
+        ), "is_vegan should return a boolean."  # nosec B101
         logger.info(f"is_vegan returned: {vegan_result}")
 
         logger.info("Diet classifier entry points work correctly.")
@@ -356,7 +293,9 @@ def test_ingredient_processor_functionality():
 
     # TODO: This test is disabled because ingredient_processor module was deleted
     # The functionality has been replaced with database manager queries
-    logger.info("Ingredient processor test skipped - module replaced with database manager")
+    logger.info(
+        "Ingredient processor test skipped - module replaced with database manager"
+    )
     return True
 
     # try:

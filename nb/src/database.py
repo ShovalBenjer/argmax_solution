@@ -27,11 +27,9 @@ Example:
 import json
 import sqlite3
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-import polars as pl
 from config import app_config
 from loguru import logger
 from opensearchpy import OpenSearch
@@ -133,7 +131,9 @@ class DatabaseManager:
         logger.info(f"Loading '{table_name}' table into memory for fuzzy lookup...")
         try:
             with self.get_sqlite_connection() as conn:
-                df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+                df = pd.read_sql_query(
+                    f"SELECT * FROM {table_name}", conn
+                )  # nosec B608
                 # For vegan_ontology, parse aliases if they are stored as JSON strings
                 if table_name == "vegan_ontology" and "aliases" in df.columns:
                     df["aliases"] = df["aliases"].apply(
@@ -285,7 +285,11 @@ class DatabaseManager:
                     best_match_data.get("is_explicitly_non_vegan", False)
                 )
                 logger.debug(
-                    f"Found vegan info for '{ingredient_name}' (fuzzy match, score {best_match_score:.2f}): {best_match_data}"
+                    (
+                        f"Found vegan info for '{ingredient_name}' (fuzzy match, score "
+                        f"{best_match_score:.2f}): "
+                        f"{best_match_data}"
+                    )
                 )
                 return best_match_data
             else:
