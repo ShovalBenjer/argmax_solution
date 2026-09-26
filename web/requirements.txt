@@ -1,8 +1,8 @@
 # Argmax Must-Have Requirements
-Flask[async]==3.0.2
+Flask[async]==3.1.3
 opensearch-py==2.8.0
 python-decouple==3.8
-requests==2.32.3
+requests==2.33.0
 pandas==2.2.3
 pyarrow==19.0.1
 
